@@ -63,11 +63,11 @@ def dumpElements( elements, indent=1 ):
 def getSchema( elements ):
     xlat = {
             'str': '*',
-            'binary': '$',
-            'int8': 'b',
-            'uint8': 'B',
-            'int16': 'w',
-            'uint16': 'W',
+            'binary': '+',
+            'int8': 'c',
+            'uint8': 'C',
+            'int16': 's',
+            'uint16': 'S',
             'int32': 'i',
             'uint32': 'I',
             'int64': 'l',
