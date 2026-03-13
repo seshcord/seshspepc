@@ -1,0 +1,281 @@
+{
+   "s2c" : {
+      "-1" : {
+         "type" : "s2c",
+         "name" : "SESHCORD_SV_ERR",
+         "num" : "-1",
+         "elements" : [
+            {
+               "desc" : "sequence ID of faulted packet",
+               "name" : "id",
+               "type" : "uint16"
+            }
+         ],
+         "desc" : "previous C->S packet had error"
+      },
+      "1" : {
+         "num" : "1",
+         "name" : "SESHCORD_SV_MSG_DEL",
+         "type" : "s2c",
+         "elements" : [
+            {
+               "type" : "uuid",
+               "name" : "id",
+               "desc" : "Message ID"
+            },
+            {
+               "desc" : "Deletor (may be original user, or mod)",
+               "type" : "uuid",
+               "name" : "by"
+            }
+         ],
+         "desc" : "message was deleted"
+      },
+      "0" : {
+         "desc" : "message sent or editted",
+         "elements" : [
+            {
+               "desc" : "message ID of this message (if it's an existing message, the client treats it as an edit)",
+               "name" : "id",
+               "type" : "uuid"
+            },
+            {
+               "type" : "uuid",
+               "name" : "chat",
+               "desc" : "uuid of chat, or user in case of dm"
+            },
+            {
+               "desc" : "user ID who sent the message",
+               "name" : "sender",
+               "type" : "uuid"
+            },
+            {
+               "name" : "content",
+               "type" : "str",
+               "desc" : "message content"
+            },
+            {
+               "desc" : "Number of attachments",
+               "name" : "attachCount",
+               "type" : "uint8"
+            },
+            {
+               "children" : [
+                  {
+                     "desc" : "Filename",
+                     "type" : "str",
+                     "name" : "filename"
+                  },
+                  {
+                     "desc" : "File size",
+                     "name" : "size",
+                     "type" : "uint32"
+                  },
+                  {
+                     "desc" : "CDN file path; client constructs web link based on secure",
+                     "type" : "str",
+                     "name" : "path"
+                  }
+               ],
+               "desc" : "Attachments connection status (if non-secure, http, else https), server domain name, etc",
+               "name" : "attachments",
+               "type" : "list"
+            }
+         ],
+         "type" : "s2c",
+         "num" : "0",
+         "name" : "SESHCORD_SV_MSG"
+      },
+      "2" : {
+         "desc" : "client got a friend request",
+         "elements" : [
+            {
+               "name" : "id",
+               "type" : "uuid",
+               "desc" : "Requestor"
+            }
+         ],
+         "name" : "SESHCORD_SV_FRIEND_REQ",
+         "num" : "2",
+         "type" : "s2c"
+      }
+   },
+   "c2s" : {
+      "2" : {
+         "type" : "c2s",
+         "name" : "SESHCORD_CL_AUTH_LOGIN",
+         "num" : "2",
+         "elements" : [
+            {
+               "desc" : "username or email",
+               "name" : "username",
+               "type" : "str"
+            },
+            {
+               "desc" : "Password (hashed)",
+               "type" : "str",
+               "name" : "password"
+            },
+            {
+               "type" : "str",
+               "name" : "antiSpam",
+               "desc" : "as above"
+            }
+         ],
+         "desc" : "client wants to log in to an existing account"
+      },
+      "5" : {
+         "desc" : "client wants to get list of DMs",
+         "elements" : [
+            {
+               "desc" : "How far back to retrieve DMs",
+               "type" : "time",
+               "name" : "since"
+            }
+         ],
+         "name" : "SESHCORD_CL_GET_DMS",
+         "num" : "5",
+         "type" : "c2s"
+      },
+      "3" : {
+         "elements" : [
+            {
+               "name" : "chat",
+               "type" : "uuid",
+               "desc" : "Chat or user to send message to"
+            },
+            {
+               "desc" : "Message text",
+               "name" : "content",
+               "type" : "str"
+            },
+            {
+               "desc" : "Number of attachments",
+               "type" : "uint8",
+               "name" : "attachCount"
+            },
+            {
+               "desc" : "Attachments",
+               "children" : [
+                  {
+                     "name" : "filename",
+                     "type" : "str",
+                     "desc" : "Filename"
+                  },
+                  {
+                     "type" : "uint32",
+                     "name" : "size",
+                     "desc" : "File size"
+                  },
+                  {
+                     "desc" : "The attachment itself.",
+                     "name" : "data",
+                     "type" : "binary"
+                  }
+               ],
+               "type" : "list",
+               "name" : "attachments"
+            }
+         ],
+         "desc" : "Message sent from client",
+         "type" : "c2s",
+         "num" : "3",
+         "name" : "SESHCORD_CL_SEND_MSG"
+      },
+      "0" : {
+         "elements" : [
+            {
+               "desc" : "Client name",
+               "name" : "clientName",
+               "type" : "str"
+            },
+            {
+               "name" : "clientVer",
+               "type" : "str",
+               "desc" : "Client version"
+            },
+            {
+               "name" : "hostInfo",
+               "type" : "struct",
+               "children" : [
+                  {
+                     "desc" : "CPU architecture",
+                     "type" : "str",
+                     "name" : "cpuArch"
+                  },
+                  {
+                     "desc" : "Operating system name and approximate version (e.g. Windows 10)",
+                     "name" : "os",
+                     "type" : "str"
+                  },
+                  {
+                     "type" : "str",
+                     "name" : "deviceModel",
+                     "desc" : "Device model name"
+                  }
+               ],
+               "desc" : "Host system info (non-identifiable)"
+            }
+         ],
+         "desc" : "client wants to initialize a connection to the server",
+         "type" : "c2s",
+         "num" : "0",
+         "name" : "SESHCORD_CL_HANDSHAKE_INIT"
+      },
+      "6" : {
+         "elements" : [],
+         "desc" : "client wants to get list of friends",
+         "name" : "SESHCORD_CL_GET_FRIENDS",
+         "num" : "6",
+         "type" : "c2s"
+      },
+      "4" : {
+         "type" : "c2s",
+         "num" : "4",
+         "name" : "SESHCORD_CL_GET_SERVERS",
+         "elements" : [],
+         "desc" : "client wants to get list of joined servers"
+      },
+      "-1" : {
+         "type" : "c2s",
+         "num" : "-1",
+         "name" : "SESHCORD_CL_ERROR",
+         "desc" : "previous S->C packet had error",
+         "elements" : [
+            {
+               "desc" : "sequence ID of faulted packet",
+               "name" : "sid",
+               "type" : "uint16"
+            }
+         ]
+      },
+      "1" : {
+         "desc" : "client wants to create a new account",
+         "elements" : [
+            {
+               "name" : "username",
+               "type" : "str",
+               "desc" : "Username"
+            },
+            {
+               "desc" : "EMail",
+               "name" : "email",
+               "type" : "str"
+            },
+            {
+               "type" : "str",
+               "name" : "password",
+               "desc" : "Password (hashed)"
+            },
+            {
+               "desc" : "anti-spam check value if applicable (captcha?)",
+               "name" : "antiSpam",
+               "type" : "str"
+            }
+         ],
+         "type" : "c2s",
+         "num" : "1",
+         "name" : "SESHCORD_CL_AUTH_REGISTER"
+      }
+   }
+}
