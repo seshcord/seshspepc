@@ -117,6 +117,21 @@ The following is the database setup:
     * time `registered`: Time of account registration
     * str `password`: Password (hashed)
 
+* `servers`: Servers/guilds
+    * uuid `id`: Unique ID
+    * str `name`: Server name
+    * time `created`: Time of creation
+
+* `roles`: Roles available on a server
+    * uuid `role`: Unique ID
+    * str `name`: Name of the role
+    * (entries for various permissions, TBD)
+
+* `role_assignments`: Roles assigned to users
+    * uuid `id`: Unique ID
+    * uuid `user`: A user with a role
+    * uuid `role`: A role issigned to the user
+
 * `chats`: Text chats of any variety
     * uuid `id`: The ID of the chat
     * uuid `server`: The server the chat lives on, if any
