@@ -147,6 +147,7 @@ The following is the database setup:
 
 * `notifications`: Any change in status a client should be notified of
     * uuid `id`: ID of this notification
+    * uuid `target`: The user the notification is sent to
     * (enum?) `type`: The type of notification. Could be a message, edit, friend request, etc.
     * time `when`: The time of the change
     * uuid `ref`: ID of the target activity. Should match the appropriate table. Ex. For a message this should point to the relevant row in the messages table
