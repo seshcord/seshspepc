@@ -139,6 +139,19 @@ The following is the database setup:
     * uuid `message`: ID of the message
     * str `url`: Link to attachment on CDN
 
+* friends
+    * uuid `id`: ID of this pairing
+    * uuid `requestor`: ID of requestor
+    * uuid `requestee`: ID of requestee
+    * bool `accepted`: Whether request was accepted
+
+* `notifications`: Any change in status a client should be notified of
+    * uuid `id`: ID of this notification
+    * (enum?) `type`: The type of notification. Could be a message, edit, friend request, etc.
+    * time `when`: The time of the change
+    * uuid `ref`: ID of the target activity. Should match the appropriate table. Ex. For a message this should point to the relevant row in the messages table
+
+
 
 
 
