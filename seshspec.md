@@ -106,3 +106,44 @@ The following packet types are recognized:
 
 * -1 `SESHCORD_SV_ERR`: previous C->S packet had error
   * `id` (uint16): sequence ID of faulted packet
+
+## Database schema ##
+
+The following is the database setup:
+
+* users
+    * uuid id: Unique ID
+    * str name: Usernae
+    * time registered: Time of account registration
+    * str password: Password (hashed)
+
+* chats
+    * uuid id: The ID of the chat
+    * uuid server: The server the chat lives on, if any
+    * str name: The name of the chat, if appropriate
+    * (enum?) type: The type of chat. Server chat room, DM, DM group, etc.
+
+* chat_participants
+    * uuid chat: The ID of the chat
+    * uuid participant: A participant in the chat. 
+
+* messages
+    * uuid id: ID of the message
+    * uuid chat: The chat the message was sent in/to
+    * uuid sender: The user that sent the message
+    * time time: The time the message was sent
+    * str text: The message text
+
+* attachments
+    * uuid id: ID of the attachment
+    * uuid message: ID of the message
+    * str url: Link to attachment on CDN
+
+
+
+
+
+
+
+
+
