@@ -111,35 +111,35 @@ The following packet types are recognized:
 
 The following is the database setup:
 
-* users
+* `users`: User accounts
     * uuid `id`: Unique ID
     * str `name`: Usernae
     * time `registered`: Time of account registration
     * str `password`: Password (hashed)
 
-* chats
+* `chats`: Text chats of any variety
     * uuid `id`: The ID of the chat
     * uuid `server`: The server the chat lives on, if any
     * str `name`: The name of the chat, if appropriate
     * (enum?) `type`: The type of chat. Server chat room, DM, DM group, etc.
 
-* chat_participants
+* `chat_participants`: Users involved in a chat
     * uuid `chat`: The ID of the chat
     * uuid `participant`: A participant in the chat. 
 
-* messages
+* `messages`: Messages making up a chat room
     * uuid `id`: ID of the message
     * uuid `chat`: The chat the message was sent in/to
     * uuid `sender`: The user that sent the message
     * time `time`: The time the message was sent
     * str `text`: The message text
 
-* attachments
+* `attachments`: Attachments on messages
     * uuid `id`: ID of the attachment
     * uuid `message`: ID of the message
     * str `url`: Link to attachment on CDN
 
-* friends
+* `friends`: Friend pairings (both active and pending)
     * uuid `id`: ID of this pairing
     * uuid `requestor`: ID of requestor
     * uuid `requestee`: ID of requestee
