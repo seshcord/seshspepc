@@ -63,7 +63,7 @@ The following packet types are recognized:
   * `antiSpam` (str): as above
 
 * 3 `SESHCORD_CL_SEND_MSG`: Message sent from client
-  * `chat` (uuid): Chat or user to send message to
+  * `chat` (uuid): Chat to send message to
   * `content` (str): Message text
   * `attachCount` (uint8): Number of attachments
   * `attachments` (list): Attachments
@@ -86,7 +86,7 @@ The following packet types are recognized:
 * 0 `SESHCORD_SV_MSG`: message sent or editted
   * `id` (uuid): message ID of this message (if it's an existing message, the
     client treats it as an edit)
-  * `chat` (uuid): uuid of chat, or user in case of dm
+  * `chat` (uuid): uuid of chat
   * `sender` (uuid): user ID who sent the message
   * `content` (str): message content
   * `attachCount` (uint8): Number of attachments
