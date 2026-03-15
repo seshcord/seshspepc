@@ -113,7 +113,7 @@ The following is the database setup:
 
 * `users`: User accounts
     * uuid `id`: Unique ID
-    * str `name`: Usernae
+    * str `name`: Username
     * time `registered`: Time of account registration
     * str `password`: Password (hashed)
 
