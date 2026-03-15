@@ -130,7 +130,7 @@ The following is the database setup:
 * `role_assignments`: Roles assigned to users
     * uuid `id`: Unique ID
     * uuid `user`: A user with a role
-    * uuid `role`: A role issigned to the user
+    * uuid `role`: A role assigned to the user
 
 * `chats`: Text chats of any variety
     * uuid `id`: The ID of the chat
