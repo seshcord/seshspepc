@@ -124,8 +124,14 @@ The following is the database setup:
 
 * `roles`: Roles available on a server
     * uuid `role`: Unique ID
+    * uuid `server`: The server this role belongs to
     * str `name`: Name of the role
-    * (entries for various permissions, TBD)
+    * int `level`: Role permission level (higher levels can perform mod actions on users with lower levels)
+    * bool `mod_role`: Can add/configure/delete a role equal or lesser to their own
+    * bool `kick`: Can kick/ban/timeout users with lesser (or no) roles
+    * bool `mod_channels`: Can add/configure/delete channels
+    * bool `invite`: Can invite users/create invite links
+    * (etc)
 
 * `role_assignments`: Roles assigned to users
     * uuid `id`: Unique ID
@@ -136,6 +142,7 @@ The following is the database setup:
     * uuid `id`: The ID of the chat
     * uuid `server`: The server the chat lives on, if any
     * str `name`: The name of the chat, if appropriate
+    * uuid `role`: For server chats, the role required to access chat
     * (enum?) `type`: The type of chat. Server chat room, DM, DM group, etc.
 
 * `chat_participants`: Users involved in a chat
