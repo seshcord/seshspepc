@@ -1,0 +1,163 @@
+server: # Serer-to-client
+  SESHCORD_SV_ERR:
+    id: -1
+    desc: previous C->S packet had error
+    fields:
+    - name: id
+      type: uint16
+      desc: sequence ID of faulted packet
+  SESHCORD_SV_MSG:
+    id: 0
+    desc: message sent or editted
+    fields:
+    - name: id
+      type: uuid
+      desc: <
+        message ID of this message (if it's an existing message, the
+        client treats it as an edit)
+    - name: chat
+      type: uuid
+      desc: uuid of chat, or user in case of dm
+    - name: sender
+      type: uuid
+      desc: user ID who sent the message
+    - name: content
+      type: str
+      desc: message content
+    - name: attachCount
+      type: uint8
+      desc: Number of attachments
+    - name: attachments
+      type: list
+      desc: <
+        Attachments connection status (if non-secure, http, else https),
+        server domain name, etc
+      children:
+      - name: filename
+        type: str
+        desc: Filename
+      - name: size
+        type: uint32
+        desc: File size
+      - name: path
+        type: str
+        desc: CDN file path; client constructs web link based on secure
+  SESHCORD_SV_MSG_DEL:
+    id: 1
+    desc: message was deleted
+    fields:
+    - name: id
+      type: uuid
+      desc: Message ID
+    - name: by
+      type: uuid
+      desc: Deletor (may be original user, or mod)
+  SESHCORD_SV_FRIEND_REQ:
+    id: 2
+    desc: client got a friend request
+    fields:
+    - name: id
+      type: uuid
+      desc: Requestor
+client: # Client-to-server
+  SESHCORD_CL_ERROR:
+    id: -1
+    desc: previous S->C packet had error
+    fields:
+    - name: sid
+      type: uint16
+      desc: sequence ID of faulted packet
+  SESHCORD_CL_HANDSHAKE_INIT:
+    id: 0
+    desc: client wants to initialize a connection to the server
+    fields:
+    - name: clientName
+      type: str
+      desc: Client name
+    - name: clientVer
+      type: str
+      desc: Client version
+    - name: hostInfo
+      type: struct
+      desc: Host system info (non-identifiable)
+      children:
+      - name: cpuArch
+        type: str
+        desc: CPU architecture
+      - name: os
+        type: str
+        desc: <
+          Operating system name and approximate version (e.g. Windows
+          10)
+      - name: deviceModel
+        type: str
+        desc: Device model name
+  SESHCORD_CL_AUTH_REGISTER:
+    id: 1
+    desc: client wants to create a new account
+    fields:
+    - name: username
+      type: str
+      desc: Username
+    - name: email
+      type: str
+      desc: EMail
+    - name: password
+      type: str
+      desc: Password (hashed)
+    - name: antiSpam
+      type: str
+      desc: anti-spam check value if applicable (captcha?)
+
+  SESHCORD_CL_AUTH_LOGIN:
+    id: 2
+    desc: client wants to log in to an existing account
+    fields:
+    - name: username
+      type: str
+      desc: username or email
+    - name: password
+      type: str
+      desc: Password (hashed)
+    - name: antiSpam
+      type: str
+      desc: as above
+  SESHCORD_CL_SEND_MSG:
+    id: 3
+    desc: Message sent from client
+    fields:
+    - name: chat
+      type: uuid
+      desc: Chat or user to send message to
+    - name: content
+      type: str
+      desc: Message text
+    - name: attachCount
+      type: uint8
+      desc: Number of attachments
+    - name: attachments
+      type: list
+      desc: Attachments
+      children:
+      - name: filename
+        type: str
+        desc: Filename
+      - name: size
+        type: uint32
+        desc: File size
+      - name: data
+        type: binary
+        desc: The attachment itself.
+  SESHCORD_CL_GET_SERVERS:
+    id: 4
+    desc: client wants to get list of joined servers
+  SESHCORD_CL_GET_DMS:
+    id: 5
+    desc: client wants to get list of DMs
+    fields:
+    - name: since
+      type: time
+      desc: How far back to retrieve DMs
+  SESHCORD_CL_GET_FRIENDS:
+    id: 6
+    desc: client wants to get list of friends
