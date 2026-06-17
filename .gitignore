@@ -2,3 +2,5 @@
 *~
 *.swp
 
+# Various local stuff
+/node_modules
