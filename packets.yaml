@@ -12,9 +12,7 @@ server: # Serer-to-client
     fields:
     - name: id
       type: uuid
-      desc: <
-        message ID of this message (if it's an existing message, the
-        client treats it as an edit)
+      desc: message ID of this message (if it's an existing message, the client treats it as an edit)
     - name: chat
       type: uuid
       desc: uuid of chat, or user in case of dm
@@ -29,9 +27,7 @@ server: # Serer-to-client
       desc: Number of attachments
     - name: attachments
       type: list
-      desc: <
-        Attachments connection status (if non-secure, http, else https),
-        server domain name, etc
+      desc: Attachments connection status (if non-secure, http, else https), server domain name, etc
       children:
       - name: filename
         type: str
@@ -86,9 +82,7 @@ client: # Client-to-server
         desc: CPU architecture
       - name: os
         type: str
-        desc: <
-          Operating system name and approximate version (e.g. Windows
-          10)
+        desc: Operating system name and approximate version (e.g. Windows 10)
       - name: deviceModel
         type: str
         desc: Device model name
