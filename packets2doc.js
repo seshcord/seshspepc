@@ -9,6 +9,10 @@ import { tsMarkdown } from 'ts-markdown';
 
 // The tree of markdown elements to render
 const entries = [
+    "<!-- This is an automatically generated file, and should",
+    "not be edited manually. Edit the packets.yaml file and",
+    "run make to regenerate this file. -->",
+    "",
     { h1: 'Seshcord Packet Types' },
 ];
 
