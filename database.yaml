@@ -57,7 +57,6 @@ roles:
     - name: invite 
       type: bool
       desc: Can invite users/create invite links
-    - (etc)
 
 role_assignments:
   desc: Roles assigned to users
@@ -157,9 +156,10 @@ notifications:
       desc: ID of this notification
     - name: target 
       type: uuid
-      d - type: (esc: 
-              The user the notification is sent to
-      name: numdesc: type: The type of notification. Could be a message, edit, friend request, etc.
+      desc: The user the notification is sent to
+    - name: type
+      type: enum
+      desc: The type of notification. Could be a message, edit, friend request, etc.
     - name: when 
       type: time
       desc: The time of the change
