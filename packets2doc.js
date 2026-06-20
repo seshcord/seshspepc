@@ -13,7 +13,7 @@ const entries = [
     "not be edited manually. Edit the packets.yaml file and",
     "run make to regenerate this file. -->",
     "",
-    { h1: 'Seshcord Packet Types' },
+    { h1: 'Seshcord Wire Protocol' },
 ];
 
 // stdin as a filehandle
@@ -21,8 +21,19 @@ const fh = fs.readFileSync( 0, 'utf8' )
 // The decoded YAML tree
 const yaml = YAML.parse( fh )
 
+// Packet data types, WIP
+/*
+var list = [];
+for( const [type, info] of Object.entries( yaml['types'] ))
+{
+    list.push( {text: [{code: type}, 
+        ": ", info['desc']]} );
+}
+entries.push( {ul: list} );
+*/
+
 // Read each side: Server->Client and Client->Server
-for( const [side, packets] of Object.entries( yaml ))
+for( const [side, packets] of Object.entries( yaml['packets'] ))
 {
     // The "human-readable" side name
     var sidename;
