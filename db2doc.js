@@ -29,7 +29,7 @@ const yaml = YAML.parse( fh )
 // console.log( yaml ); process.exit( 1 );
 
 // Read each database table
-for( const [name, data] of Object.entries( yaml ))
+for( const [name, data] of Object.entries( yaml['tables'] ))
 {
     entries.push( {h2: name} );
     entries.push( {p: data['desc']} );

@@ -1,168 +1,188 @@
-users:
-  desc: User accounts
-  fields:
-    - name: id 
-      type: uuid
-      desc: Unique ID
-    - name: name 
-      type: str
-      desc: Username, should be (more or less) fixed, and suitable for a login name
-    - name: display_name 
-      type: str
-      desc: User's visible name, freely changeable (within reason)
-    - name: registered 
-      type: time
-      desc: Time of account registration
-    - name: password 
-      type: str
-      desc: Password (hashed)
+types:
+  int:
+    desc: Standard integer
+    postgresql: int
+  str:
+    desc: Variable-length string
+    postgresql: int
+  uuid:
+    desc: Unique ID
+    postgresql: int
+  time:
+    desc: Unix timestamp
+    postgresql: int
+  bool:
+    desc: Boolean value
+    postgresql: boolean
+  enum:
+    desc: Enumerated value
+    postgresql: str # for now
+tables:
+  users:
+    desc: User accounts
+    fields:
+      - name: id 
+        type: uuid
+        desc: Unique ID
+      - name: name 
+        type: str
+        desc: Username, should be (more or less) fixed, and suitable for a login name
+      - name: display_name 
+        type: str
+        desc: User's visible name, freely changeable (within reason)
+      - name: registered 
+        type: time
+        desc: Time of account registration
+      - name: password 
+        type: str
+        desc: Password (hashed)
 
-servers:
-  desc: Servers/guilds
-  fields:
-    - name: id 
-      type: uuid
-      desc: Unique ID
-    - name: name 
-      type: str
-      desc: Server name
-    - name: created 
-      type: time
-      desc: Time of creation
+  servers:
+    desc: Servers/guilds
+    fields:
+      - name: id 
+        type: uuid
+        desc: Unique ID
+      - name: name 
+        type: str
+        desc: Server name
+      - name: created 
+        type: time
+        desc: Time of creation
 
-roles:
-  desc: Roles available on a server
-  fields:
-    - name: role 
-      type: uuid
-      desc: Unique ID
-    - name: server 
-      type: uuid
-      desc: The server this role belongs to
-    - name: name 
-      type: str
-      desc: Name of the role
-    - name: level 
-      type: int
-      desc: Role permission level (higher levels can perform mod actions on users with lower levels)
-    - name: mod_role 
-      type: bool
-      desc: Can add/configure/delete a role equal or lesser to their own
-    - name: kick 
-      type: bool
-      desc: Can kick/ban/timeout users with lesser (or no) roles
-    - name: mod_channels 
-      type: bool
-      desc: Can add/configure/delete channels
-    - name: invite 
-      type: bool
-      desc: Can invite users/create invite links
+  roles:
+    desc: Roles available on a server
+    fields:
+      - name: role 
+        type: uuid
+        desc: Unique ID
+      - name: server 
+        type: uuid
+        desc: The server this role belongs to
+      - name: name 
+        type: str
+        desc: Name of the role
+      - name: level 
+        type: int
+        desc: Role permission level (higher levels can perform mod actions on users with lower levels)
+      - name: mod_role 
+        type: bool
+        desc: Can add/configure/delete a role equal or lesser to their own
+      - name: kick 
+        type: bool
+        desc: Can kick/ban/timeout users with lesser (or no) roles
+      - name: mod_channels 
+        type: bool
+        desc: Can add/configure/delete channels
+      - name: invite 
+        type: bool
+        desc: Can invite users/create invite links
 
-role_assignments:
-  desc: Roles assigned to users
-  fields:
-    - name: id 
-      type: uuid
-      desc: Unique ID
-    - name: user 
-      type: uuid
-      desc: A user with a role
-    - name: role 
-      type: uuid
-      desc: A role assigned to the user
+  role_assignments:
+    desc: Roles assigned to users
+    fields:
+      - name: id 
+        type: uuid
+        desc: Unique ID
+      - name: user 
+        type: uuid
+        desc: A user with a role
+      - name: role 
+        type: uuid
+        desc: A role assigned to the user
 
-chats:
-  desc: Text chats of any variety
-  fields:
-    - name: id 
-      type: uuid
-      desc: The ID of the chat
-    - name: server 
-      type: uuid
-      desc: The server the chat lives on, if any
-    - name: name 
-      type: str
-      desc: The name of the chat, if appropriate
-    - name: role 
-      type: uuid
-      desc: For server chats, the role required to access chat
-    - name: type 
-      type: enum?`
-      desc: The type of chat. Server chat room, DM, DM group, etc.
+  chats:
+    desc: Text chats of any variety
+    fields:
+      - name: id 
+        type: uuid
+        desc: The ID of the chat
+      - name: server 
+        type: uuid
+        desc: The server the chat lives on, if any
+      - name: name 
+        type: str
+        desc: The name of the chat, if appropriate
+      - name: role 
+        type: uuid
+        desc: For server chats, the role required to access chat
+      - name: type 
+        type: enum
+        desc: The type of chat. Server chat room, DM, DM group, etc.
 
-chat_participants:
-  desc: Users involved in a chat
-  fields:
-    - name: chat 
-      type: uuid
-      desc: The ID of the chat
-    - name: participant 
-      type: uuid
-      desc: A participant in the chat. 
+  chat_participants:
+    desc: Users involved in a chat
+    fields:
+      - name: chat 
+        type: uuid
+        desc: The ID of the chat
+      - name: participant 
+        type: uuid
+        desc: A participant in the chat. 
 
-messages:
-  desc: Messages making up a chat room
-  fields:
-    - name: id 
-      type: uuid
-      desc: ID of the message
-    - name: chat 
-      type: uuid
-      desc: The chat the message was sent in/to
-    - name: sender 
-      type: uuid
-      desc: The user that sent the message
-    - name: time 
-      type: time
-      desc: The time the message was sent
-    - name: text 
-      type: str
-      desc: The message text
+  messages:
+    desc: Messages making up a chat room
+    fields:
+      - name: id 
+        type: uuid
+        desc: ID of the message
+      - name: chat 
+        type: uuid
+        desc: The chat the message was sent in/to
+      - name: sender 
+        type: uuid
+        desc: The user that sent the message
+      - name: time 
+        type: time
+        desc: The time the message was sent
+      - name: text 
+        type: str
+        desc: The message text
 
-attachments:
-  desc: Attachments on messages
-  fields:
-    - name: id 
-      type: uuid
-      desc: ID of the attachment
-    - name: message 
-      type: uuid
-      desc: ID of the message
-    - name: url 
-      type: str
-      desc: Link to attachment on CDN
+  attachments:
+    desc: Attachments on messages
+    fields:
+      - name: id 
+        type: uuid
+        desc: ID of the attachment
+      - name: message 
+        type: uuid
+        desc: ID of the message
+      - name: url 
+        type: str
+        desc: Link to attachment on CDN
 
-friends:
-  desc: Friend pairings (both active and pending)
-  fields:
-    - name: id 
-      type: uuid
-      desc: ID of this pairing
-    - name: requestor 
-      type: uuid
-      desc: ID of requestor
-    - name: requestee 
-      type: uuid
-      desc: ID of requestee
-    - name: accepted 
-      type: bool
-      desc: Whether request was accepted
+  friends:
+    desc: Friend pairings (both active and pending)
+    fields:
+      - name: id 
+        type: uuid
+        desc: ID of this pairing
+      - name: requestor 
+        type: uuid
+        desc: ID of requestor
+      - name: requestee 
+        type: uuid
+        desc: ID of requestee
+      - name: accepted 
+        type: bool
+        desc: Whether request was accepted
 
-notifications:
-  desc: Any change in status a client should be notified of
-  fields:
-    - name: id 
-      type: uuid
-      desc: ID of this notification
-    - name: target 
-      type: uuid
-      desc: The user the notification is sent to
-    - name: type
-      type: enum
-      desc: The type of notification. Could be a message, edit, friend request, etc.
-    - name: when 
-      type: time
-      desc: The time of the change
-    - name: ref 
-      type: uuid
-      desc: ID of the target activity. Should match the appropriate table. Ex. For a message this should point to the relevant row in the messages table
+  notifications:
+    desc: Any change in status a client should be notified of
+    fields:
+      - name: id 
+        type: uuid
+        desc: ID of this notification
+      - name: target 
+        type: uuid
+        desc: The user the notification is sent to
+      - name: type
+        type: enum
+        desc: The type of notification. Could be a message, edit, friend request, etc.
+      - name: when 
+        type: time
+        desc: The time of the change
+      - name: ref 
+        type: uuid
+        desc: ID of the target activity. Should match the appropriate table. Ex. For a message this should point to the relevant row in the messages table
