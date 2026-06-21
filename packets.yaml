@@ -76,6 +76,24 @@ types: # The actual types definition
 # Packet structures
 
 packets_preample: # The markdown heading
+  - h2: Wire Protocol
+  - p: Seshcord runs over TCP, optionally over SSL.
+  - p: Seshcord data will be sent between client and server as a stream of packets. Each packet describes exatly one C->S or S->C event.
+  - p: "The packets have the following format:"
+  - ul:
+    - 4 ASCII characters 'SPKT' (clean 4 bytes)
+    - Payload size (uint32)
+    - Packet type (int16)
+    - Sequence id (uint16)
+    - Payload, if payload size non-zero. The format of the payload depends on the packet type.
+  - h2: Packet Specification
+  - p:
+    - "The packet specification defines all packets understood by Seshcord, and their structure. The formal specification lives in the "
+    - link:
+        href: ../blob/main/packets.yaml
+        text: packets.yaml
+    - " file in the spec repo. This file is used to generate the [[Wiki entry|Packets]], as well as relevant code, through the use of scripts."
+ 
 
 packets: # The definition
   server: # Serer-to-client

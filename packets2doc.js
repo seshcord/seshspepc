@@ -12,8 +12,7 @@ const entries = [
     "<!-- This is an automatically generated file, and should",
     "not be edited manually. Edit the packets.yaml file and",
     "run make to regenerate this file. -->",
-    "",
-    { h1: 'Seshcord Wire Protocol' },
+    ""
 ];
 
 // stdin as a filehandle
@@ -21,97 +20,111 @@ const fh = fs.readFileSync( 0, 'utf8' )
 // The decoded YAML tree
 const yaml = YAML.parse( fh )
 
-// Packet data types, WIP
-/*
 var list = [];
-for( const [type, info] of Object.entries( yaml['types'] ))
+for( const [section, data] of Object.entries( yaml ))
 {
-    list.push( {text: [{code: type}, 
-        ": ", info['desc']]} );
-}
-entries.push( {ul: list} );
-*/
-
-// Read each side: Server->Client and Client->Server
-for( const [side, packets] of Object.entries( yaml['packets'] ))
-{
-    // The "human-readable" side name
-    var sidename;
-    if( side == 'server' )
+    if( section == 'types' )
     {
-        sidename = "Server-to-Client packets";
+        // Packet data types, WIP
+        var list = [];
+        for( const [type, info] of Object.entries( data ))
+        {
+            list.push( {text: [{code: type}, 
+                ": ", info['desc']]} );
+        }
+        entries.push( {ul: list} );
     }
-    else if( side == 'client' )
+    else if( section == 'packets' )
     {
-        sidename = "Client-to-Server packets";
+        // Read each side: Server->Client and Client->Server
+        for( const [side, packets] of Object.entries( data ))
+        {
+            // The "human-readable" side name
+            var sidename;
+            if( side == 'server' )
+            {
+                sidename = "Server-to-Client packets";
+            }
+            else if( side == 'client' )
+            {
+                sidename = "Client-to-Server packets";
+            }
+            else
+            {
+                console.error( "Unknown packet side: ", side );
+                process.exit( 1 );
+            }
+
+            entries.push( {h2: sidename} );
+
+            // The packets on this side
+            var list = []
+
+            //console.log( side );
+            for( const [name, def] of Object.entries( packets ))
+            {
+                // Packet name, id, and description
+                list.push( [
+                    {text: [
+                        def['id'], ' ', 
+                        {code: name}, ': ',
+                        def['desc']
+                    ]}
+                ] );
+
+                // Packet data, if any
+                if( 'fields' in def )
+                {
+                    // The list of fields to be rendered as markdown
+                    var fields = [];
+
+                    for( const field of def['fields'] )
+                    {
+                        // Name, type and description of field, to
+                        // be rendered as markdown
+                        const info = {text: [
+                            {code: field['name']},
+                            ' (', field['type'], '): ',
+                            field['desc']
+                        ]};
+
+                        // For structs or lists: The child fields
+                        if( 'children' in field )
+                        {
+                            // The list of children, to be rendered
+                            // as markdown
+                            var children = []
+
+                            for( var child of field['children'] )
+                            {
+                                children.push( {text: [
+                                    {code: child['name']},
+                                    ' (', child['type'], '): ',
+                                    child['desc']
+                                ]} );
+                            }
+                            fields.push( [info, {ul: children}] );
+                        }
+                        else
+                        {
+                            fields.push( info );
+                        }
+                    }
+                    list.at( -1 ).push( {ul: fields} );
+                }
+                //console.log( name, def );
+            }
+            entries.push( {ul: list} );
+        }
+    }
+    else if( Array.isArray( data ))
+    {
+        entries.push( ...data );
     }
     else
     {
-        console.error( "Unknown packet side: ", side );
-        process.exit( 1 );
+        entries.push( {p: "Non-array spec data"} );
     }
-
-    entries.push( {h2: sidename} );
-
-    // The packets on this side
-    var list = []
-
-    //console.log( side );
-    for( const [name, def] of Object.entries( packets ))
-    {
-        // Packet name, id, and description
-        list.push( [
-            {text: [
-                def['id'], ' ', 
-                {code: name}, ': ',
-                def['desc']
-            ]}
-        ] );
-
-        // Packet data, if any
-        if( 'fields' in def )
-        {
-            // The list of fields to be rendered as markdown
-            var fields = [];
-
-            for( const field of def['fields'] )
-            {
-                // Name, type and description of field, to
-                // be rendered as markdown
-                const info = {text: [
-                    {code: field['name']},
-                    ' (', field['type'], '): ',
-                    field['desc']
-                ]};
-
-                // For structs or lists: The child fields
-                if( 'children' in field )
-                {
-                    // The list of children, to be rendered
-                    // as markdown
-                    var children = []
-
-                    for( var child of field['children'] )
-                    {
-                        children.push( {text: [
-                            {code: child['name']},
-                            ' (', child['type'], '): ',
-                            child['desc']
-                        ]} );
-                    }
-                    fields.push( [info, {ul: children}] );
-                }
-                else
-                {
-                    fields.push( info );
-                }
-            }
-            list.at( -1 ).push( {ul: fields} );
-        }
-        //console.log( name, def );
-    }
-    entries.push( {ul: list} );
-
 }
 
 // Render the actual markdown to stdout
