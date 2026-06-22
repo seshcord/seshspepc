@@ -1,3 +1,10 @@
+# We'll define a set of "generic" types for describing data in the database,
+# which will be converted into the appropriate column types by scripts.
+#
+# Each type will have a name (the key), as it will be referenced in the
+# documentation, a description ('desc'), and possibly a column type for each
+# supported database engine (like postgresql)
+
 types:
   int:
     desc: Standard integer
@@ -17,6 +24,10 @@ types:
   enum:
     desc: Enumerated value
     postgresql: str # for now
+
+# The tables that will go into the database. Each table will have a name (the
+# key), a description, and its fields (a.k.a. columns), which will each have a
+# name, type (a generic type, one of the above), and description.
 tables:
   users:
     desc: User accounts
