@@ -117,6 +117,10 @@ for( const [section, data] of Object.entries( yaml ))
             entries.push( {ul: list} );
         }
     }
+    else if( typeof data === "string" )
+    {
+        entries.push( data );
+    }
     else if( Array.isArray( data ))
     {
         entries.push( ...data );

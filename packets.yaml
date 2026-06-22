@@ -1,7 +1,8 @@
 # This file is going to look slightly screwball. It contains what looks like
-# HTML-over-YAML, but is actually a combination of Markdown (in pseudo-HTML, as
-# accepted by ts-markdown), and data that can be used to both render wiki
-# entries and generate code for the various seshcord libraries and tools.
+# HTML-over-YAML, but is actually a combination of Markdown (either directly as
+# YAML strings, or in a list of pseudo-HTML, as accepted by ts-markdown), and
+# data that can be used to both render wiki entries and generate code for the
+# various seshcord libraries and tools.
 #
 # This file contains a series of dictionary objects, presented in order they
 # should appear in the wiki entry. Some of these are markdown that should be
@@ -23,11 +24,15 @@ header:
 # -------------------------------------------------- 
 
 # Basic data types
-types_preamble: # The markdown preample
+types_preamble: # The markdown preample, pseudo-HTML
   - h2: Basic Data Types
   - p: "The following definitions shall be used to denote basic physical data formats:"
 
-types: # The actual types definition
+# The formal definition. Each entry consists of the name of the data type (as
+# the key), and a table containing a description of the type (desc), and
+# possibly a set of native types used to represent the type in various
+# programming languages (like C)
+types:
   int8:
     desc: Signed, two's complement 8-bit integer
     c: uint8_t
@@ -75,24 +80,24 @@ types: # The actual types definition
 
 # Packet structures
 
-packets_preample: # The markdown heading
-  - h2: Wire Protocol
-  - p: Seshcord runs over TCP, optionally over SSL.
-  - p: Seshcord data will be sent between client and server as a stream of packets. Each packet describes exatly one C->S or S->C event.
-  - p: "The packets have the following format:"
-  - ul:
-    - 4 ASCII characters 'SPKT' (clean 4 bytes)
-    - Payload size (uint32)
-    - Packet type (int16)
-    - Sequence id (uint16)
-    - Payload, if payload size non-zero. The format of the payload depends on the packet type.
-  - h2: Packet Specification
-  - p:
-    - "The packet specification defines all packets understood by Seshcord, and their structure. The formal specification lives in the "
-    - link:
-        href: ../blob/main/packets.yaml
-        text: packets.yaml
-    - " file in the spec repo. This file is used to generate the [[Wiki entry|Packets]], as well as relevant code, through the use of scripts."
+# The markdown preamble, as a string
+packets_preample: |
+  ## Wire Protocol ##
+
+  Seshcord runs over TCP, optionally over SSL.
+
+  Seshcord data will be sent between client and server as a stream of packets. Each packet describes exatly one C->S or S->C event.
+
+  The packets have the following format:
+    * 4 ASCII characters 'SPKT' (clean 4 bytes)
+    * Payload size (uint32)
+    * Packet type (int16)
+    * Sequence id (uint16)
+    * Payload, if payload size non-zero. The format of the payload depends on the packet type.
+
+  ## Packet Specification ##
+
+  The packet specification defines all packets understood by Seshcord, and their structure. The formal specification lives in the [packets.yaml](href: ../blob/main/packets.yaml) file in the spec repo. This file is used to generate the [[Wiki entry|Packets]], as well as relevant code, through the use of scripts.
  
 
 packets: # The definition
