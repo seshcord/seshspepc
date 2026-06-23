@@ -17,12 +17,7 @@ import { tsMarkdown } from 'ts-markdown';
 export function render( formatter )
 {
     // The tree of markdown elements to render
-    const entries = [
-        "<!-- This is an automatically generated file, and should",
-        "not be edited manually. Edit the packets.yaml file and",
-        "run make to regenerate this file. -->",
-        ""
-    ];
+    const entries = [];
 
     // stdin as a filehandle
     const fh = fs.readFileSync( 0, 'utf8' )
