@@ -1,41 +1,19 @@
-/*
- * Read the packet spec in YAML format from stdin and render markdown on
- * stdout
- */
+import { render } from './yaml2md.js';
 
-import fs from 'fs';
-import YAML from 'yaml';
-import { tsMarkdown } from 'ts-markdown';
-
-// The tree of markdown elements to render
-const entries = [
-    "<!-- This is an automatically generated file, and should",
-    "not be edited manually. Edit the packets.yaml file and",
-    "run make to regenerate this file. -->",
-    ""
-];
-
-// stdin as a filehandle
-const fh = fs.readFileSync( 0, 'utf8' )
-// The decoded YAML tree
-const yaml = YAML.parse( fh )
-
-var list = [];
-for( const [section, data] of Object.entries( yaml ))
-{
-    if( section == 'types' )
-    {
-        // Packet data types, WIP
+const formatter = {
+    'types': function( data ) {
         var list = [];
         for( const [type, info] of Object.entries( data ))
         {
             list.push( {text: [{code: type}, 
                 ": ", info['desc']]} );
         }
-        entries.push( {ul: list} );
-    }
-    else if( section == 'packets' )
-    {
+        return [{ul: list}];
+    },
+    packets: function( data ) {
+        // Formatted content to be returned
+        var result = []
+
         // Read each side: Server->Client and Client->Server
         for( const [side, packets] of Object.entries( data ))
         {
@@ -55,7 +33,7 @@ for( const [section, data] of Object.entries( yaml ))
                 process.exit( 1 );
             }
 
-            entries.push( {h2: sidename} );
+            result.push( {h2: sidename} );
 
             // The packets on this side
             var list = []
@@ -114,23 +92,11 @@ for( const [section, data] of Object.entries( yaml ))
                 }
                 //console.log( name, def );
             }
-            entries.push( {ul: list} );
+            result.push( {ul: list} );
         }
-    }
-    else if( typeof data === "string" )
-    {
-        entries.push( data );
-    }
-    else if( Array.isArray( data ))
-    {
-        entries.push( ...data );
-    }
-    else
-    {
-        entries.push( {p: "Non-array spec data"} );
-    }
-}
 
-// Render the actual markdown to stdout
-console.log( tsMarkdown( entries ));
+        return result;
+    }
+};
 
+render( formatter );
