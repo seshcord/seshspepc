@@ -1,0 +1,489 @@
+# This file is going to look slightly screwball. It contains a combination of
+# Markdown (either directly as YAML strings, or in a list of pseudo-HTML, as
+# accepted by ts-markdown), and data that can be used to both render wiki
+# entries and generate code for the various seshcord libraries and tools.
+#
+# This file contains a series of dictionary objects, presented in order they
+# should appear in the wiki entry. Some of these are markdown that should be
+# rendered into the wiki, and some are "machine-readable" definitions of stuff
+# that will be both rendered into wiki entries, and read by code-generating
+# code. Since every section is a toplevel dict, the latter entries can easily
+# be plucked out of the tree by the appropriate parsers.
+#
+# The wiki-generator(s) will process these sections in order, pasting in the
+# markdown sections unchanged, and rendering the 'code' sections in whatever
+# format is appropriate for that section.
+
+# ----------------------------------------------------------------------
+
+# The "do-not-edit" comment heading
+comment: |
+        <!-- This is an automatically generated file, and should
+        not be edited manually. Edit the packets.yaml file and
+        run make to regenerate this file. -->
+
+# The main heading
+
+heading: |
+  # Seshcord Specifications #
+
+  This will define the specifications for the Seshcord infrastructure. This
+  includes things such as the wire protocol and database schema.
+
+wire_protocol_preamble: |
+  ## Wire Protocol ##
+
+  The Wire Protocol defines how Seshcord communicates over the network,
+  including the structure of packets used to transmit data.
+
+  The formal specification lives in the [spec.yaml](../blob/main/spec.yaml)
+  file in the spec repo. This file is used to generate this wiki document, and
+  also contains machine-readable entries to generate code in the appropriate
+  languages.
+
+# Basic data types
+packet_types_preamble: # The markdown preample, pseudo-HTML
+  - h2: Basic Data Types
+  - p: "The following definitions shall be used to denote basic physical data formats:"
+
+# The formal definition. Each entry consists of the name of the data type (as
+# the key), and a table containing a description of the type (desc), and
+# possibly a set of native types used to represent the type in various
+# programming languages (like C)
+packet_types:
+  int8:
+    desc: Signed, two's complement 8-bit integer
+    c: uint8_t
+  uint8:
+    desc: As above, but unsigned
+    c: uint8_t
+  int16:
+    desc: Signed, two's complement, big-endian 16-bit integer
+    c: int16_t
+  uint16:
+    desc: As above, but unsigned
+    c: uint16_t
+  int32:
+    desc: As above, but 32-bit
+    c: int32_t
+  uint32:
+    desc: As above, but unsigned
+    c: uint32_t
+  int64:
+    desc: As above, but 64-bit
+    c: int64_t
+  uint64:
+    desc: As above, but unsigned
+    c: uint64_t
+  int128:
+    desc: As above, but 128-bit
+    c: int128_t
+  uint128:
+    desc: As above, but unsigned
+    c: uint128_t
+  str:
+    desc: "Null-terminated UTF-8 encoded string"
+    c: "char *"
+  time:
+    desc: A uint64 Unix timestamp
+    c: uint64_t
+  uuid:
+    desc: A uint128 UUID
+    c: uint128_t
+  binary:
+    desc: Arbitrary binary data. The element immediately preceeding this element must be an integer, representing the size in bytes.
+    c: "char *"
+  list:
+    desc: A series of elements that may appear zero or more times. The element immediately preceeding this element must be an integer, representing the number of elements.
+
+# The markdown preamble, as a string
+packets_preample: |
+  ## Wire Protocol ##
+
+  Seshcord runs over TCP, optionally over SSL.
+
+  Seshcord data will be sent between client and server as a stream of packets.
+  Each packet describes exatly one C->S or S->C event.
+
+  The packets have the following format:
+
+  - 4 ASCII characters 'SPKT' (clean 4 bytes)
+  - Payload size (uint32)
+  - Packet type (int16)
+  - Sequence id (uint16)
+  - Payload, if payload size non-zero. The format of the payload depends on the packet type.
+
+  ## Packet Specification ##
+
+  The packet specification defines all packets understood by Seshcord, and
+  their structure.
+
+packets: # The definition
+  server: # Serer-to-client
+    SESHCORD_SV_ERR:
+      id: -1
+      desc: previous C->S packet had error
+      fields:
+      - name: id
+        type: uint16
+        desc: sequence ID of faulted packet
+    SESHCORD_SV_MSG:
+      id: 0
+      desc: message sent or editted
+      fields:
+      - name: id
+        type: uuid
+        desc: message ID of this message (if it's an existing message, the client treats it as an edit)
+      - name: chat
+        type: uuid
+        desc: uuid of chat, or user in case of dm
+      - name: sender
+        type: uuid
+        desc: user ID who sent the message
+      - name: content
+        type: str
+        desc: message content
+      - name: attachCount
+        type: uint8
+        desc: Number of attachments
+      - name: attachments
+        type: list
+        desc: Attachments connection status (if non-secure, http, else https), server domain name, etc
+        children:
+        - name: filename
+          type: str
+          desc: Filename
+        - name: size
+          type: uint32
+          desc: File size
+        - name: path
+          type: str
+          desc: CDN file path; client constructs web link based on secure
+    SESHCORD_SV_MSG_DEL:
+      id: 1
+      desc: message was deleted
+      fields:
+      - name: id
+        type: uuid
+        desc: Message ID
+      - name: by
+        type: uuid
+        desc: Deletor (may be original user, or mod)
+    SESHCORD_SV_FRIEND_REQ:
+      id: 2
+      desc: client got a friend request
+      fields:
+      - name: id
+        type: uuid
+        desc: Requestor
+  client: # Client-to-server
+    SESHCORD_CL_ERROR:
+      id: -1
+      desc: previous S->C packet had error
+      fields:
+      - name: sid
+        type: uint16
+        desc: sequence ID of faulted packet
+    SESHCORD_CL_HANDSHAKE_INIT:
+      id: 0
+      desc: client wants to initialize a connection to the server
+      fields:
+      - name: clientName
+        type: str
+        desc: Client name
+      - name: clientVer
+        type: str
+        desc: Client version
+      - name: hostInfo
+        type: struct
+        desc: Host system info (non-identifiable)
+        children:
+        - name: cpuArch
+          type: str
+          desc: CPU architecture
+        - name: os
+          type: str
+          desc: Operating system name and approximate version (e.g. Windows 10)
+        - name: deviceModel
+          type: str
+          desc: Device model name
+    SESHCORD_CL_AUTH_REGISTER:
+      id: 1
+      desc: client wants to create a new account
+      fields:
+      - name: username
+        type: str
+        desc: Username
+      - name: email
+        type: str
+        desc: EMail
+      - name: password
+        type: str
+        desc: Password (hashed)
+      - name: antiSpam
+        type: str
+        desc: anti-spam check value if applicable (captcha?)
+
+    SESHCORD_CL_AUTH_LOGIN:
+      id: 2
+      desc: client wants to log in to an existing account
+      fields:
+      - name: username
+        type: str
+        desc: username or email
+      - name: password
+        type: str
+        desc: Password (hashed)
+      - name: antiSpam
+        type: str
+        desc: as above
+    SESHCORD_CL_SEND_MSG:
+      id: 3
+      desc: Message sent from client
+      fields:
+      - name: chat
+        type: uuid
+        desc: Chat or user to send message to
+      - name: content
+        type: str
+        desc: Message text
+      - name: attachCount
+        type: uint8
+        desc: Number of attachments
+      - name: attachments
+        type: list
+        desc: Attachments
+        children:
+        - name: filename
+          type: str
+          desc: Filename
+        - name: size
+          type: uint32
+          desc: File size
+        - name: data
+          type: binary
+          desc: The attachment itself.
+    SESHCORD_CL_GET_SERVERS:
+      id: 4
+      desc: client wants to get list of joined servers
+    SESHCORD_CL_GET_DMS:
+      id: 5
+      desc: client wants to get list of DMs
+      fields:
+      - name: since
+        type: time
+        desc: How far back to retrieve DMs
+    SESHCORD_CL_GET_FRIENDS:
+      id: 6
+      desc: client wants to get list of friends
+
+db_preamble: |
+  ## Database Schema ##
+
+  This defines the tables used in the database to store all information.
+
+  Data types will be given as "generic" types, such as "int" or "str". The
+  actual types that will be assigned to database columns will be chosen,
+  according to the database engine, to be the best match to these generic
+  types.
+  
+db_types_preamble:
+  - {h3: "Types"}
+  - {p: "The following types shall be used to describe database column types within this document:"}
+
+db_types:
+  int:
+    desc: Standard integer
+    postgresql: int
+  str:
+    desc: Variable-length string
+    postgresql: text
+  uuid:
+    desc: Unique ID
+    postgresql: int
+  time:
+    desc: Unix timestamp
+    postgresql: int
+  bool:
+    desc: Boolean value
+    postgresql: boolean
+  enum:
+    desc: Enumerated value
+    postgresql: text # for now
+
+db_tables_preamble:
+  - {h3: "Tables"}
+  - {p: "The database shall consist of the following tables:"}
+
+# The tables that will go into the database. Each table will have a name (the
+# key), a description, and its fields (a.k.a. columns), which will each have a
+# name, type (a generic type, one of the above), and description.
+db_tables:
+  users:
+    desc: User accounts
+    fields:
+      - name: id 
+        type: uuid
+        desc: Unique ID
+      - name: name 
+        type: str
+        desc: Username, should be (more or less) fixed, and suitable for a login name
+      - name: display_name 
+        type: str
+        desc: User's visible name, freely changeable (within reason)
+      - name: registered 
+        type: time
+        desc: Time of account registration
+      - name: password 
+        type: str
+        desc: Password (hashed)
+
+  servers:
+    desc: Servers/guilds
+    fields:
+      - name: id 
+        type: uuid
+        desc: Unique ID
+      - name: name 
+        type: str
+        desc: Server name
+      - name: created 
+        type: time
+        desc: Time of creation
+
+  roles:
+    desc: Roles available on a server
+    fields:
+      - name: role 
+        type: uuid
+        desc: Unique ID
+      - name: server 
+        type: uuid
+        desc: The server this role belongs to
+      - name: name 
+        type: str
+        desc: Name of the role
+      - name: level 
+        type: int
+        desc: Role permission level (higher levels can perform mod actions on users with lower levels)
+      - name: mod_role 
+        type: bool
+        desc: Can add/configure/delete a role equal or lesser to their own
+      - name: kick 
+        type: bool
+        desc: Can kick/ban/timeout users with lesser (or no) roles
+      - name: mod_channels 
+        type: bool
+        desc: Can add/configure/delete channels
+      - name: invite 
+        type: bool
+        desc: Can invite users/create invite links
+
+  role_assignments:
+    desc: Roles assigned to users
+    fields:
+      - name: id 
+        type: uuid
+        desc: Unique ID
+      - name: user 
+        type: uuid
+        desc: A user with a role
+      - name: role 
+        type: uuid
+        desc: A role assigned to the user
+
+  chats:
+    desc: Text chats of any variety
+    fields:
+      - name: id 
+        type: uuid
+        desc: The ID of the chat
+      - name: server 
+        type: uuid
+        desc: The server the chat lives on, if any
+      - name: name 
+        type: str
+        desc: The name of the chat, if appropriate
+      - name: role 
+        type: uuid
+        desc: For server chats, the role required to access chat
+      - name: type 
+        type: enum
+        desc: The type of chat. Server chat room, DM, DM group, etc.
+
+  chat_participants:
+    desc: Users involved in a chat
+    fields:
+      - name: chat 
+        type: uuid
+        desc: The ID of the chat
+      - name: participant 
+        type: uuid
+        desc: A participant in the chat. 
+
+  messages:
+    desc: Messages making up a chat room
+    fields:
+      - name: id 
+        type: uuid
+        desc: ID of the message
+      - name: chat 
+        type: uuid
+        desc: The chat the message was sent in/to
+      - name: sender 
+        type: uuid
+        desc: The user that sent the message
+      - name: time 
+        type: time
+        desc: The time the message was sent
+      - name: text 
+        type: str
+        desc: The message text
+
+  attachments:
+    desc: Attachments on messages
+    fields:
+      - name: id 
+        type: uuid
+        desc: ID of the attachment
+      - name: message 
+        type: uuid
+        desc: ID of the message
+      - name: url 
+        type: str
+        desc: Link to attachment on CDN
+
+  friends:
+    desc: Friend pairings (both active and pending)
+    fields:
+      - name: id 
+        type: uuid
+        desc: ID of this pairing
+      - name: requestor 
+        type: uuid
+        desc: ID of requestor
+      - name: requestee 
+        type: uuid
+        desc: ID of requestee
+      - name: accepted 
+        type: bool
+        desc: Whether request was accepted
+
+  notifications:
+    desc: Any change in status a client should be notified of
+    fields:
+      - name: id 
+        type: uuid
+        desc: ID of this notification
+      - name: target 
+        type: uuid
+        desc: The user the notification is sent to
+      - name: type
+        type: enum
+        desc: The type of notification. Could be a message, edit, friend request, etc.
+      - name: when 
+        type: time
+        desc: The time of the change
+      - name: ref 
+        type: uuid
+        desc: ID of the target activity. Should match the appropriate table. Ex. For a message this should point to the relevant row in the messages table
