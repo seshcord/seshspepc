@@ -1,10 +1,9 @@
-wiki: node_modules wiki/Home.md wiki/Packets.md wiki/Database.md
+wiki: node_modules wiki/Home.md wiki/Specification.md 
 wiki/Home.md:
+	mkdir -p wiki
 	git submodule update --init wiki
-wiki/Packets.md: packets.yaml packets2doc.js 
-	node packets2doc.js < packets.yaml > wiki/Packets.md
-wiki/Database.md: database.yaml db2doc.js 
-	node db2doc.js < database.yaml > wiki/Database.md
+wiki/Specification.md: spec.yaml yaml2md.js yaml2wiki.js
+	node yaml2wiki.js < spec.yaml > wiki/Specification.md
 
 node_modules: package.json
 	npm install
