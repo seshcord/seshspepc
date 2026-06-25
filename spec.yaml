@@ -30,16 +30,16 @@ heading: |
   This will define the specifications for the Seshcord infrastructure. This
   includes things such as the wire protocol and database schema.
 
+  The formal specification lives in the [spec.yaml](../blob/main/spec.yaml)
+  file in the spec repo. This file is used to generate this wiki document, and
+  also contains machine-readable entries to generate code in the appropriate
+  languages.
+
 wire_protocol_preamble: |
   ## Wire Protocol ##
 
   The Wire Protocol defines how Seshcord communicates over the network,
   including the structure of packets used to transmit data.
-
-  The formal specification lives in the [spec.yaml](../blob/main/spec.yaml)
-  file in the spec repo. This file is used to generate this wiki document, and
-  also contains machine-readable entries to generate code in the appropriate
-  languages.
 
 # Basic data types
 packet_types_preamble: # The markdown preample, pseudo-HTML
