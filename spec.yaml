@@ -95,6 +95,8 @@ packet_types:
     c: "char *"
   list:
     desc: A series of elements that may appear zero or more times. The element immediately preceeding this element must be an integer, representing the number of elements.
+  struct:
+    desc: A series of elements that are logically grouped together. They may be grouped into some structure in target language (like C), but the packet will simply include them sequentially with no extra data.
 
 # The markdown preamble, as a string
 packets_preample: |
