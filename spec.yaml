@@ -19,7 +19,7 @@
 # The "do-not-edit" comment heading
 comment: |
         <!-- This is an automatically generated file, and should
-        not be edited manually. Edit the packets.yaml file and
+        not be edited manually. Edit the spec.yaml file and
         run make to regenerate this file. -->
 
 # The main heading
