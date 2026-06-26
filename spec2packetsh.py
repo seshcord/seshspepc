@@ -96,6 +96,8 @@ def main():
      .typedef( 'uint64_t', 'timestamp' )
      .typedef( 'uint8_t', 'uuid[16]' )
      .blank()
+     .output( f"typedef void (*packet_callback)( void * );" )
+     .blank()
      )
 
     with open( 'spec.yaml' ) as fh:
@@ -108,7 +110,15 @@ def main():
     ptypes.append( "PKT_ITEM_END" )
     fmt.enum( "packet_items", *ptypes )
 
-    for packet, info in spec['packets']['client'].items():
+    fmt.struct( "packet_info" )
+    fmt.var( 'enum packet_items *', 'schema', comment='Packet schema' )
+    fmt.var( 'int', 'len', comment='Packet schema length' )
+    fmt.var( 'packet_callback', 'callback', comment='Handler function' )
+    fmt.close()
+    fmt.blank()
+
+    side = 'client'
+    for packet, info in spec['packets'][side].items():
         fmt.comment( info['desc'] )
         fmt.define( packet, info['id'] )
         if 'fields' in info:
@@ -144,6 +154,24 @@ def main():
 
         fmt.funcprototype( 'void', f"callback_{packet.lower()}", cbarg )
         fmt.blank()
+
+    # Map packet types by number and sort them
+    packetmap = {v['id']: k for k, v in spec['packets'][side].items()}
+    packetnums = list( packetmap.keys() )
+    packetnums.sort()
+
+    fmt.define( f"PACKET_{side.upper()}_MIN", packetnums[0] )
+    fmt.define( f"PACKET_{side.upper()}_MAX", packetnums[-1] )
+
+    infos = []
+    for i in range( packetnums[0], packetnums[-1] + 1 ):
+        if i in packetmap:
+            packet = packetmap[i]
+            infos.append( "{ " + f"{packet}_SCHEMA, {packet}_SCHEMA_LEN, callback_{packet.lower()}" + " }" )
+    fmt.arrayliteral( 'packet_info', f"{side}_packet_dispatcher", *infos )
+
+
+
 
 
 main()
