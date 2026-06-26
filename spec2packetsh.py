@@ -40,6 +40,7 @@ class CFormatter:
         for comment in comments:
             self.output( " * " + comment )
         self.output( " */" )
+        return self
 
     def include( self, include ):
         """Output an #include directice"""
@@ -186,7 +187,12 @@ def main():
     fmt = CFormatter()
 
     # Output the heading
-    ( fmt.include( 'stdint.h' )
+    ( fmt.comment( "This is an automatically generated file. Do not edit.",
+                  '',
+                  "To regenerate this file, edit spec.yaml and call",
+                  "spec2packetsh.py" )
+
+     .include( 'stdint.h' )
      .pragma( 'pack(1)' )
      .blank()
      .typedef( 'uint64_t', 'timestamp' )
