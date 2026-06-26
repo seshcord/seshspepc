@@ -28,9 +28,18 @@ class CFormatter:
         """Output a blank line"""
         return self.output( "" )
 
-    def comment( self, text ):
-        """Output a (single line) comment"""
-        return self.output( f"/* {text} */" )
+    def comment( self, *comments ):
+        """Output a comment.
+
+        If one argument is provided, output a single-line comment. Else, output
+        a multiline comment.
+        """
+        if len( comments ) == 1:
+            return self.output( f"/* {comments[0]} */" )
+        self.output( "/*" )
+        for comment in comments:
+            self.output( " * " + comment )
+        self.output( " */" )
 
     def include( self, include ):
         """Output an #include directice"""
@@ -199,9 +208,10 @@ def main():
     for pkttype in types:
         ptypes.append( f"PKT_ITEM_{pkttype.upper()}" )
     ptypes.append( "PKT_ITEM_END" )
-    fmt.comment( "The types of data that may be included in a packet" )
+    fmt.comment( "The types of data that may be included in a packet.",
+                "See the specification for what these types mean.",
+                "PKT_ITEM_END marks the end of a list or struct." )
     fmt.enum( "packet_items", *ptypes )
-    fmt.comment( "PKT_ITEM_END marks the end of a list or struct" )
 
     fmt.struct( "packet_info" )
     fmt.var( 'enum packet_items *', 'schema', comment='Packet schema' )
