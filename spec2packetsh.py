@@ -176,6 +176,7 @@ class CFormatter:
 def main():
     fmt = CFormatter()
 
+    # Output the heading
     ( fmt.include( 'stdint.h' )
      .pragma( 'pack(1)' )
      .blank()
@@ -186,15 +187,21 @@ def main():
      .blank()
      )
 
+    # Load the YAML
     with open( 'spec.yaml' ) as fh:
         spec = yaml.load( fh )
 
+    # The list of types used by the spec
     types = spec['packet_types']
+
+    # Create the packet_items enum
     ptypes = []
     for pkttype in types:
         ptypes.append( f"PKT_ITEM_{pkttype.upper()}" )
     ptypes.append( "PKT_ITEM_END" )
+    fmt.comment( "The types of data that may be included in a packet" )
     fmt.enum( "packet_items", *ptypes )
+    fmt.comment( "PKT_ITEM_END marks the end of a list or struct" )
 
     fmt.struct( "packet_info" )
     fmt.var( 'enum packet_items *', 'schema', comment='Packet schema' )
