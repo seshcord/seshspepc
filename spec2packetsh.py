@@ -3,48 +3,99 @@ import yaml
 import sys
 
 class CFormatter:
+    """A basic C code emitter.
+
+    This emits C code structures in a relatively structured way. It only
+    includes a small subset of C structures; just enough to render the elements
+    we need for the Seshcord header files.
+
+    Each method called will output the relevant structure to stdout (keeping
+    track of indents as needed.
+    """
+
     def __init__( self ):
+        """Initialize a new formatter."""
+
+        # The current set of nested structures
         self.nests = []
-        pass
 
     def output( self, content ):
+        """Output a line, with indents as necessary"""
         print( " " * (len( self.nests ) * 4) + content )
         return self
 
     def blank( self ):
+        """Output a blank line"""
         return self.output( "" )
 
     def comment( self, text ):
+        """Output a (single line) comment"""
         return self.output( f"/* {text} */" )
 
     def include( self, include ):
+        """Output an #include directice"""
         return self.output( f"#include <{include}>" )
 
     def pragma( self, pragma ):
+        """Output a #pragma directive"""
         return self.output( f"#pragma {pragma}" )
 
     def define( self, word, content=None ):
-        result = f"#DEFINE {word}"
+        """Output a #define directive.
+
+        word -- The keyword to define
+        content -- What to replace the keyword with. If None, will simply
+        #definethe keyword into existence.
+        """
+        result = f"#define {word}"
         if content != None:
             result += f" {content}"
         return self.output( result )
 
     def var( self, vtype, name, comment=None ):
+        """Output a variable definition.
+
+        vtype -- The type of the variable
+        name -- The name of the variable
+        comment -- An optional comment to include after the definition
+        """
+
         result = f"{vtype} {name};"
         if comment != None:
             result += f" /* {comment} */"
         return self.output( result )
 
-    def typedef( self, old, new ):
-        return self.output( f"typedef {old} {new};" )
+    def typedef( self, new, existing ):
+        """Output a typedef.
+
+        new -- The name of the type to create
+        existing -- The type to declare `new` equivalent to
+        """
+        return self.output( f"typedef {new} {existing};" )
 
     def nest( self, ntype ):
-        """Open a nested structure"""
+        """Open a nested structure.
+
+        This pushes a new nested structure (struct, enum, etc) to the list, but
+        does not output anything. Further outputs will be indented to match,
+        until a close() is called.
+
+        This is not meant to be called directly, but used by other
+        structure-specific methods.
+
+        ntype -- The type of nested structure. close() will reference this to
+        determine the appropriate output to close the structure.
+        """
 
         self.nests.append( ntype )
         return self
 
     def struct( self, stype=None ):
+        """Open a structure.
+
+        stype -- The name of the structure type to define. If None, defines an
+        anonymous structure.
+        """
         if( stype != None ):
             self.output( f"struct {stype}" )
         else:
@@ -54,6 +105,13 @@ class CFormatter:
         return self
 
     def enum( self, etype=None, *values ):
+        """Define an enum.
+
+        etype -- The name of the enum type to define. If None, defines an
+        anonymous enum.
+        values -- The list of valid values for the enum.
+        """
+
         if( etype != None ):
             self.output( f"enum {etype}" )
         else:
@@ -66,6 +124,17 @@ class CFormatter:
         return self
 
     def close( self, option=None ):
+        """Close a nested structure.
+
+        Unlike nest(), this *is* intended to be called directly, to mark the
+        end of the open structure.
+
+        option -- Additional code to add to the closed structure. Its function
+        defines on the type of structure: For a struct, enum, or array, it adds
+        a variable name to the end, defining an instance of the defined
+        structure.
+        """
+
         ntype = self.nests.pop()
         if ntype in ('struct', 'enum', 'array'):
             if option != None:
@@ -76,6 +145,16 @@ class CFormatter:
             return self.output( "}" )
 
     def arrayliteral( self, atype, name, *items ):
+        """Define an array literal.
+
+        This creates an array of the given type, and includes a provided
+        initializer list.
+
+        atype -- The base data type of the array
+        name -- The name of the variable to create
+        items -- The initializer list
+        """
+
         self.output( f"{atype} {name}[] = " + "{" )
         self.nest( 'array' )
         for item in items:
@@ -84,6 +163,13 @@ class CFormatter:
         return self
 
     def funcprototype( self, ret, name, *args ):
+        """Define a function prototype.
+
+        ret -- Return value
+        name -- Function name
+        args -- Argument list
+        """
+
         self.output( f"{ret} {name}( {', '.join( args )} );" )
 
 
@@ -174,4 +260,5 @@ def main():
 
 
 
-main()
+if __name__ == '__main__':
+    main()
