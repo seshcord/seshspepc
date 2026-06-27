@@ -75,12 +75,6 @@ packet_types:
   uint64:
     desc: As above, but unsigned
     c: uint64_t
-  int128:
-    desc: As above, but 128-bit
-    c: int128_t
-  uint128:
-    desc: As above, but unsigned
-    c: uint128_t
   str:
     desc: "Null-terminated UTF-8 encoded string"
     c: "char *"
@@ -88,8 +82,8 @@ packet_types:
     desc: A uint64 Unix timestamp
     c: uint64_t
   uuid:
-    desc: A uint128 UUID
-    c: uint128_t
+    desc: A 128-bit UUID
+    c: uuid # Will be typedef'ed into uint8_t[8]
   binary:
     desc: Arbitrary binary data. The element immediately preceeding this element must be an integer, representing the size in bytes.
     c: "char *"
