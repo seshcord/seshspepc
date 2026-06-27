@@ -236,66 +236,66 @@ def main():
      .blank()
      )
 
-    side = 'client'
-    fmt.comment( f"{side}-side packets." ).blank()
-    for packet, info in spec['packets'][side].items():
-        fmt.comment( info['desc'] )
-        fmt.define( packet, info['id'] )
-        if 'fields' in info:
-            schema = []
-            fmt.struct( packet.lower() )
-            for field in info['fields']:
-                schema.append( f"PKT_ITEM_{field['type'].upper()}" )
-                if 'children' in field:
-                    fmt.struct()
-                    for child in field['children']:
-                        fmt.var( types[child['type']]['c'], child['name'], child['desc'] )
-                        schema.append( f"PKT_ITEM_{child['type'].upper()}" )
-                    if field['type'] == 'list':
-                        fmt.close( f"*{field['name']}" )
-                    if field['type'] == 'struct':
-                        fmt.close( field['name'] )
-                    schema.append( "PKT_ITEM_END" )
+    for side in spec['packets']:
+        fmt.comment( f"{side}-side packets." ).blank()
+        for packet, info in spec['packets'][side].items():
+            fmt.comment( info['desc'] )
+            fmt.define( packet, info['id'] )
+            if 'fields' in info:
+                schema = []
+                fmt.struct( packet.lower() )
+                for field in info['fields']:
+                    schema.append( f"PKT_ITEM_{field['type'].upper()}" )
+                    if 'children' in field:
+                        fmt.struct()
+                        for child in field['children']:
+                            fmt.var( types[child['type']]['c'], child['name'], child['desc'] )
+                            schema.append( f"PKT_ITEM_{child['type'].upper()}" )
+                        if field['type'] == 'list':
+                            fmt.close( f"*{field['name']}" )
+                        if field['type'] == 'struct':
+                            fmt.close( field['name'] )
+                        schema.append( "PKT_ITEM_END" )
 
 
-                if 'c' in types[field['type']]:
-                    fmt.var( types[field['type']]['c'], field['name'],
-                            field['desc'] )
+                    if 'c' in types[field['type']]:
+                        fmt.var( types[field['type']]['c'], field['name'],
+                                field['desc'] )
 
-            fmt.close()
-            fmt.arrayliteral( 'enum packet_items',
-                             f"{packet.upper()}_SCHEMA",
-                             *schema )
-            fmt.define( f"{packet.upper()}_SCHEMA_LEN {len( schema )}" )
-        if 'fields' in info:
-            cbarg = f"struct {packet.lower()}"
-        else:
-            cbarg = 'void *'
-
-        fmt.funcprototype( 'void', f"callback_{packet.lower()}", cbarg )
-        fmt.blank()
-
-    # Map packet types by number and sort them
-    packetmap = {v['id']: k for k, v in spec['packets'][side].items()}
-    packetnums = list( packetmap.keys() )
-    packetnums.sort()
-
-    (fmt.comment( 'Minimum and maximum pacet numbers' )
-     .define( f"PACKET_{side.upper()}_MIN", packetnums[0] )
-     .define( f"PACKET_{side.upper()}_MAX", packetnums[-1] )
-     .blank()
-     )
-
-    fmt.comment( "List of packet type information" )
-    infos = []
-    for i in range( packetnums[0], packetnums[-1] + 1 ):
-        if i in packetmap:
-            packet = packetmap[i]
-            if 'fields' in spec['packets'][side][packet]:
-                infos.append( "{ " + f"{packet}_SCHEMA, {packet}_SCHEMA_LEN, (packet_callback) callback_{packet.lower()}" + " }" )
+                fmt.close()
+                fmt.arrayliteral( 'enum packet_items',
+                                 f"{packet.upper()}_SCHEMA",
+                                 *schema )
+                fmt.define( f"{packet.upper()}_SCHEMA_LEN {len( schema )}" )
+            if 'fields' in info:
+                cbarg = f"struct {packet.lower()}"
             else:
-                infos.append( "{ " + f"NULL, 0, (packet_callback) callback_{packet.lower()}" + " }" )
-    fmt.arrayliteral( 'struct packet_info', f"{side}_packet_dispatcher", *infos )
+                cbarg = 'void *'
+
+            fmt.funcprototype( 'void', f"callback_{packet.lower()}", cbarg )
+            fmt.blank()
+
+        # Map packet types by number and sort them
+        packetmap = {v['id']: k for k, v in spec['packets'][side].items()}
+        packetnums = list( packetmap.keys() )
+        packetnums.sort()
+
+        (fmt.comment( 'Minimum and maximum pacet numbers' )
+         .define( f"PACKET_{side.upper()}_MIN", packetnums[0] )
+         .define( f"PACKET_{side.upper()}_MAX", packetnums[-1] )
+         .blank()
+         )
+
+        fmt.comment( "List of packet type information" )
+        infos = []
+        for i in range( packetnums[0], packetnums[-1] + 1 ):
+            if i in packetmap:
+                packet = packetmap[i]
+                if 'fields' in spec['packets'][side][packet]:
+                    infos.append( "{ " + f"{packet}_SCHEMA, {packet}_SCHEMA_LEN, (packet_callback) callback_{packet.lower()}" + " }" )
+                else:
+                    infos.append( "{ " + f"NULL, 0, (packet_callback) callback_{packet.lower()}" + " }" )
+        fmt.arrayliteral( 'struct packet_info', f"{side}_packet_dispatcher", *infos )
 
 
 
