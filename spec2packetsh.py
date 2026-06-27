@@ -198,6 +198,8 @@ def main():
      .typedef( 'uint64_t', 'timestamp' )
      .typedef( 'uint8_t', 'uuid[16]' )
      .blank()
+     .comment( "Handler function type for received packets" )
+     # typedef() doesn't know how to do function pointers
      .output( f"typedef void (*packet_callback)( void * );" )
      .blank()
      )
@@ -214,19 +216,28 @@ def main():
     for pkttype in types:
         ptypes.append( f"PKT_ITEM_{pkttype.upper()}" )
     ptypes.append( "PKT_ITEM_END" )
-    fmt.comment( "The types of data that may be included in a packet.",
-                "See the specification for what these types mean.",
-                "PKT_ITEM_END marks the end of a list or struct." )
-    fmt.enum( "packet_items", *ptypes )
+    (fmt.comment( "The types of data that may be included in a packet.",
+                 "See the specification for what these types mean.",
+                 "PKT_ITEM_END marks the end of a list or struct." )
+     .enum( "packet_items", *ptypes )
+     .blank()
+     )
 
-    fmt.struct( "packet_info" )
-    fmt.var( 'enum packet_items *', 'schema', comment='Packet schema' )
-    fmt.var( 'int', 'len', comment='Packet schema length' )
-    fmt.var( 'packet_callback', 'callback', comment='Handler function' )
-    fmt.close()
-    fmt.blank()
+    # Create the packet_info structure
+    (fmt
+     .comment( "Information for handling a particular packet. This includes",
+              "schema (which descrives the physical packet structure), and",
+              "a callback function to handle it." )
+     .struct( "packet_info" )
+     .var( 'enum packet_items *', 'schema', comment='Packet schema' )
+     .var( 'int', 'len', comment='Packet schema length' )
+     .var( 'packet_callback', 'callback', comment='Handler function' )
+     .close()
+     .blank()
+     )
 
     side = 'client'
+    fmt.comment( f"{side}-side packets." ).blank()
     for packet, info in spec['packets'][side].items():
         fmt.comment( info['desc'] )
         fmt.define( packet, info['id'] )
@@ -269,15 +280,22 @@ def main():
     packetnums = list( packetmap.keys() )
     packetnums.sort()
 
-    fmt.define( f"PACKET_{side.upper()}_MIN", packetnums[0] )
-    fmt.define( f"PACKET_{side.upper()}_MAX", packetnums[-1] )
+    (fmt.comment( 'Minimum and maximum pacet numbers' )
+     .define( f"PACKET_{side.upper()}_MIN", packetnums[0] )
+     .define( f"PACKET_{side.upper()}_MAX", packetnums[-1] )
+     .blank()
+     )
 
+    fmt.comment( "List of packet type information" )
     infos = []
     for i in range( packetnums[0], packetnums[-1] + 1 ):
         if i in packetmap:
             packet = packetmap[i]
-            infos.append( "{ " + f"{packet}_SCHEMA, {packet}_SCHEMA_LEN, callback_{packet.lower()}" + " }" )
-    fmt.arrayliteral( 'packet_info', f"{side}_packet_dispatcher", *infos )
+            if 'fields' in spec['packets'][side][packet]:
+                infos.append( "{ " + f"{packet}_SCHEMA, {packet}_SCHEMA_LEN, callback_{packet.lower()}" + " }" )
+            else:
+                infos.append( "{ " + f"NULL, 0, callback_{packet.lower()}" + " }" )
+    fmt.arrayliteral( 'struct packet_info', f"{side}_packet_dispatcher", *infos )
 
 
 
