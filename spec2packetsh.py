@@ -292,9 +292,9 @@ def main():
         if i in packetmap:
             packet = packetmap[i]
             if 'fields' in spec['packets'][side][packet]:
-                infos.append( "{ " + f"{packet}_SCHEMA, {packet}_SCHEMA_LEN, callback_{packet.lower()}" + " }" )
+                infos.append( "{ " + f"{packet}_SCHEMA, {packet}_SCHEMA_LEN, (packet_callback) callback_{packet.lower()}" + " }" )
             else:
-                infos.append( "{ " + f"NULL, 0, callback_{packet.lower()}" + " }" )
+                infos.append( "{ " + f"NULL, 0, (packet_callback) callback_{packet.lower()}" + " }" )
     fmt.arrayliteral( 'struct packet_info', f"{side}_packet_dispatcher", *infos )
 
 
