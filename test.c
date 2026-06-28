@@ -5,7 +5,7 @@
 #include "packets.h"
 
 int encode_from_schema( void *, enum packet_items *, int, char *, int, int );
-
+int decode_from_schema( void *, enum packet_items *, int, char *, int, int );
 /*
  * The different types of types we might want to decode. Makes typecasting slightly cleaner.
  */
@@ -26,6 +26,24 @@ union ptype
     void *ptr;
 };
 
+/* The physical size of a packet item in its structure */
+int ptypesizes[] = {
+    1, /* PKT_ITEM_INT8 */
+    1, /* PKT_ITEM_UINT8 */
+    2, /* PKT_ITEM_INT16 */
+    2, /* PKT_ITEM_UINT16 */
+    4, /* PKT_ITEM_INT32 */
+    4, /* PKT_ITEM_UINT32 */
+    8, /* PKT_ITEM_INT64 */
+    8, /* PKT_ITEM_UINT64 */
+    sizeof( char * ), /* PKT_ITEM_STR */
+    8, /* PKT_ITEM_TIME */
+    16, /* PKT_ITEM_UUID */
+    sizeof( char * ), /* PKT_ITEM_BINARY */
+    0, /* PKT_ITEM_LIST */
+    0, /* PKT_ITEM_STRUCT */
+    0, /* PKT_ITEM_END */
+};
 int main( void )
 {
     /* Sample packet */
@@ -49,8 +67,20 @@ int main( void )
     int res = encode_from_schema( &test, SESHCORD_SV_MSG_SCHEMA, SESHCORD_SV_MSG_SCHEMA_LEN,
             buffer, sizeof( buffer ), 1 );
     fprintf( stderr, "size: %i\n", res );
+
+    fprintf( stderr, "RE-READING\n" );
     /* Write the actual packet to stdout so we can hexdump it and examine it */
-    fwrite( buffer, res, 1, stdout );
+    /* fwrite( buffer, res, 1, stdout ); */
+    struct seshcord_sv_msg test2;
+    res = decode_from_schema( &test2, SESHCORD_SV_MSG_SCHEMA, SESHCORD_SV_MSG_SCHEMA_LEN,
+            buffer, res, 1 );
+    fprintf( stderr, "size: %i\n", res );
+
+    fprintf( stderr, "Message: %s\n", test2.content );
+    fprintf( stderr, "Attachments: %i\n", test2.attachCount );
+    fprintf( stderr, "Attachment 1 path: %s\n", test2.attachments[0].path );
+
+
     return 0;
 }
 
@@ -58,6 +88,7 @@ int main( void )
  * The following are helper macros for encode_from_schema(). They reference
  * local variables within that function, and perform some macro magic
  */
+
 
 /* Copy `s` bytes from `from` to the output buffer, and adjust the `size`
  * and `remain` counters accordingly */
@@ -214,6 +245,160 @@ int encode_from_schema( void *packet_data,
         }
     }
     return size;
+}
+
+/* FIXME: These should check if the relevant structure overruns the input
+ * buffer and return with error if so */
+
+/* Copy `s` bytes from `from` to the output buffer, and adjust the `size`
+ * and `remain` counters accordingly */
+#define decodebuffrom( from, s ) \
+    fprintf( stderr, "Copying %i bytes\n", s ); \
+    memcpy( output, from, s ); \
+    output += s; 
+
+/* Copy `s` bytes from the input pointer, and also update it */
+#define decodebuf( s ) \
+    decodebuffrom( input, s ) \
+    input += s;
+
+/* Copy the data pointed to by the input buffer, treating it as type `t`,
+ * where `t` is a member of the `ptype` union, and not a "type" per se */
+#define decodebuft( t ) \
+    decodebuf( sizeof( u-> t ));
+
+/* Copy the data pointed to by the input buffer, and save it as an integer
+ * in `lastint`. */
+#define decodebufsave( t ) \
+    decodebuft( t ); \
+    lastint = u-> t ; \
+    fprintf( stderr, "Decoded an int %i\n", lastint )
+
+int decode_from_schema( void *packet_data, 
+        enum packet_items * schema, int len,
+        char *buffer, int size, int count )
+{
+    int i; /* Index into schema */
+    char *input = buffer; /* Pointer to current input item */
+    void *output = packet_data; /* Pointer to current output item */
+    long lastint = 0; /* The previously decoded integer */
+    int tmp, tmp2; /* Temporary integer storate */
+    int lsize; /* The size of the schema for a sublist */
+    union ptype *u; /* The input pointer as a union */
+    int j; /* Counter for repeating the decode `count` times */
+
+    for( j = 0; j < count; j++ )
+    {
+        for( i = 0; i < len; i++ )
+        {
+            u = output;
+            fprintf( stderr, "Schema item type %i\n", schema[i] );
+
+            switch( schema[i] )
+            {
+                /* A UUID, just copy the data */
+                case PKT_ITEM_UUID: /* 128-bit */
+                    decodebuft( uuid );
+                    break;
+
+                /* The basic integer types. Save the supplied value in
+                 * `lastint` as it may be used to indicate the size of a
+                 * sublist or binary blob */
+                case PKT_ITEM_INT64:
+                    decodebufsave( int64 );
+                    break;
+                case PKT_ITEM_UINT64:
+                case PKT_ITEM_TIME:
+                    decodebufsave( uint64 );
+                    break;
+                case PKT_ITEM_INT32:
+                    decodebufsave( int32 );
+                    break;
+                case PKT_ITEM_UINT32:
+                    decodebufsave( uint32 );
+                    break;
+                case PKT_ITEM_INT16:
+                    decodebufsave( int16 );
+                    break;
+                case PKT_ITEM_UINT16:
+                    decodebufsave( uint16 );
+                    break;
+                case PKT_ITEM_INT8:
+                    decodebufsave( int8 );
+                    break;
+                case PKT_ITEM_UINT8:
+                    decodebufsave( uint8 );
+                    break;
+
+                /* Null-terminated string; get its size and copy it. Note that
+                 * we're not copying from the input buffer, but from where the
+                 * given pointer points. */
+                case PKT_ITEM_STR:
+                    /* FIXME: Return with error if this "string" tries to
+                     * overrun the input buffer */
+                    tmp = strlen( input ) + 1;
+                    fprintf( stderr, "Copying a string of size %i\n", tmp );
+                    u->str = malloc( sizeof( char ) * tmp );
+                    strcpy( u->str, input );
+                    output += sizeof( u->str );
+                    input += tmp;
+                    break;
+
+                /* Raw binary data; the previously encoded int specifies its
+                 * size. As with str, this isn't copied directly from the input
+                 * buffer. */
+                case PKT_ITEM_BINARY:
+                    /* FIXME: Return with error if this blob is larger than
+                     * the remaining size of the input buffer */
+                    u->binary = malloc( lastint );
+                    memcpy( u->binary, input, lastint );
+                    output += sizeof( u->binary );
+                    input += lastint;
+                    break;
+
+                /* For sublists, we figure out how many elements a single
+                 * instance of the list contains, and recursively call
+                 * ourselves, as if the parts of the sublist were their own
+                 * packet payload. Like str, this isn't copied from the input
+                 * buffer, but from the given pointer. */
+                case PKT_ITEM_LIST:
+                    lsize = 0; /* list schema size */
+                    tmp = 0; /* sublist entry size */
+                    i++; /* Move past the list start marker */
+                    while( schema[i + lsize] != PKT_ITEM_END )
+                    {
+                        tmp += ptypesizes[schema[i + lsize]];
+                        lsize++;
+                    }
+                    if( tmp > 0 )
+                    {
+                        u->ptr = malloc( tmp * lsize );
+                        fprintf( stderr, "Processing list of size %i of %i elements\n", lsize,lastint );
+                        tmp2 = decode_from_schema( u->ptr, &schema[i], lsize, input, size - (input - buffer), lastint );
+                        input += tmp2;
+
+                    }
+                    else
+                    {
+                        u->ptr = NULL;
+                    }
+                    output += sizeof( u->ptr );
+                    i += lsize;
+                    break;
+
+                /* Ignore structures, they don't affect the physical format of
+                 * the payload */
+                case PKT_ITEM_STRUCT:
+                    break;
+
+                /* Ignore the end of the structure as well. (PKT_ITEM_END is
+                 * absorbed by PKT_ITEM_LIST when used for a list) */
+                case PKT_ITEM_END:
+                    break;
+            } 
+        }
+    }
+    return input - buffer;
 }
 
 /* Dummy callbacks to shut up the linker */
