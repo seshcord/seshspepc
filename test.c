@@ -34,13 +34,16 @@ int main( void )
         { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  }, /* chat */
         { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  }, /* sender */
         "This is a message", /* message content */
-        1, /* attachment count */
+        2, /* attachment count */
         NULL /* The attachments, we'll fill this in a moment */
     };
-    test.attachments = malloc( sizeof( *test.attachments ));
+    test.attachments = malloc( sizeof( *test.attachments ) * 2 );
     test.attachments[0].filename = "test.txt";
     test.attachments[0].size = 42;
     test.attachments[0].path = "http://test.example.org/test.txt";
+    test.attachments[1].filename = "cat.png";
+    test.attachments[1].size = 1457664;
+    test.attachments[1].path = "http://test.example.org/cat.png";
 
     char buffer[256];
     int res = encode_from_schema( &test, SESHCORD_SV_MSG_SCHEMA, SESHCORD_SV_MSG_SCHEMA_LEN,
