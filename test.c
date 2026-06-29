@@ -247,33 +247,46 @@ int encode_from_schema( void *packet_data,
     return size;
 }
 
+/* The following are helper macros for decode_from_schema(). Basically the
+ * converse of the macros used for the encode function. */
 /* FIXME: These should check if the relevant structure overruns the input
  * buffer and return with error if so */
 
-/* Copy `s` bytes from `from` to the output buffer, and adjust the `size`
- * and `remain` counters accordingly */
 #define decodebuffrom( from, s ) \
     fprintf( stderr, "Copying %i bytes\n", s ); \
     memcpy( output, from, s ); \
     output += s; 
 
-/* Copy `s` bytes from the input pointer, and also update it */
 #define decodebuf( s ) \
     decodebuffrom( input, s ) \
     input += s;
 
-/* Copy the data pointed to by the input buffer, treating it as type `t`,
- * where `t` is a member of the `ptype` union, and not a "type" per se */
 #define decodebuft( t ) \
     decodebuf( sizeof( u-> t ));
 
-/* Copy the data pointed to by the input buffer, and save it as an integer
- * in `lastint`. */
 #define decodebufsave( t ) \
     decodebuft( t ); \
     lastint = u-> t ; \
     fprintf( stderr, "Decoded an int %i\n", lastint )
 
+/*
+ * Decode a received packet (payload)
+ *
+int decode_from_schema( void *packet_data, 
+        enum packet_items * schema, int len,
+        char *buffer, int size, int count )
+ * packet_data: A structure tgo decode data into
+ * schema: The packet schema
+ * len: Number of elements in the schema
+ * buffer: The buffer to read raw encoded data from
+ * size: The length of the encoded packet
+ * count: The number of elements to encode. For a sublist, this is the
+ * number of elements, otherwise 1.
+ *
+ * return: The number of bytes read from the encoded packet, or negative if
+ * an error occurred.
+ *
+ */
 int decode_from_schema( void *packet_data, 
         enum packet_items * schema, int len,
         char *buffer, int size, int count )
