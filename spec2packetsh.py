@@ -1,6 +1,8 @@
 import json
 import yaml
 import sys
+from pathlib import Path
+from argparse import ArgumentParser
 
 class CFormatter:
     """A basic C code emitter.
@@ -13,15 +15,21 @@ class CFormatter:
     track of indents as needed.
     """
 
-    def __init__( self ):
-        """Initialize a new formatter."""
+    def __init__( self, fh=None ):
+        """Initialize a new formatter.
+
+        fh -- The filehandle to write to, default stdout
+        """
 
         # The current set of nested structures
         self.nests = []
+        if fh == None:
+            fh = sys.stdout
+        self.fh = fh
 
     def output( self, content ):
         """Output a line, with indents as necessary"""
-        print( " " * (len( self.nests ) * 4) + content )
+        print( " " * (len( self.nests ) * 4) + content, file=self.fh )
         return self
 
     def blank( self ):
@@ -42,9 +50,20 @@ class CFormatter:
         self.output( " */" )
         return self
 
-    def include( self, include ):
-        """Output an #include directice"""
-        return self.output( f"#include <{include}>" )
+    def include( self, include, local=False ):
+        """Output an #include directice
+
+        local -- If the include is "local" (enclosed in quotes
+            rather than brackets
+        """
+        if local:
+            l = '"'
+            r = '"'
+        else:
+            l = '<'
+            r = '>'
+
+        return self.output( f"#include {l}{include}{r}" )
 
     def pragma( self, pragma ):
         """Output a #pragma directive"""
@@ -184,7 +203,47 @@ class CFormatter:
 
 
 def main():
-    fmt = CFormatter()
+    parser = ArgumentParser(
+            description='Generate packet schema C files from the spec' )
+    parser.add_argument(
+            'spec', nargs='?', type=Path,
+            help="Spec YAML file (default stdin)" )
+    parser.add_argument(
+            'output', nargs='?', type=Path,
+            help="Output file (default stdout)" )
+    parser.add_argument(
+            '--code', '-c', action='store_true',
+            help="Generate the code file. (Default is generate the " +
+            "header, unless the output filename ends in .c)" )
+    parser.add_argument(
+            '--include', '-i', default='packets.h',
+            help="The file to include in the .c output. (Default " +
+            '"packets.h")' )
+
+    args = parser.parse_args()
+
+    if args.output == None:
+        ofh = sys.stdout
+    else:
+        ofh = open( args.output, 'wt' )
+        if args.output.suffix == '.c':
+            args.code = True
+
+    if args.spec == None:
+        ifh = sys.stdin
+    else:
+        ifh = open( args.spec, 'rt' )
+
+    with ifh:
+        with ofh:
+            if args.code:
+                make_packets_c( ifh, ofh, args.include )
+            else:
+                make_packets_h( ifh, ofh )
+
+# Make the packets.h file
+def make_packets_h( ifh, ofh ):
+    fmt = CFormatter( ofh )
 
     # Output the heading
     ( fmt.comment( "This is an automatically generated file. Do not edit.",
@@ -193,6 +252,7 @@ def main():
                   "spec2packetsh.py" )
 
      .include( 'stdint.h' )
+     .include( 'stdlib.h' )
      .pragma( 'pack(1)' )
      .blank()
      .typedef( 'uint64_t', 'timestamp' )
@@ -205,8 +265,7 @@ def main():
      )
 
     # Load the YAML
-    with open( 'spec.yaml' ) as fh:
-        spec = yaml.load( fh )
+    spec = yaml.load( ifh )
 
     # The list of types used by the spec
     types = spec['packet_types']
@@ -249,30 +308,64 @@ def main():
                     if 'children' in field:
                         fmt.struct()
                         for child in field['children']:
-                            fmt.var( types[child['type']]['c'], child['name'], child['desc'] )
                             schema.append( f"PKT_ITEM_{child['type'].upper()}" )
+                            fmt.var( types[child['type']]['c'], child['name'], child['desc'] )
                         if field['type'] == 'list':
                             fmt.close( f"*{field['name']}" )
                         if field['type'] == 'struct':
                             fmt.close( field['name'] )
                         schema.append( "PKT_ITEM_END" )
 
-
                     if 'c' in types[field['type']]:
                         fmt.var( types[field['type']]['c'], field['name'],
                                 field['desc'] )
 
                 fmt.close()
-                fmt.arrayliteral( 'enum packet_items',
-                                 f"{packet.upper()}_SCHEMA",
-                                 *schema )
-                fmt.define( f"{packet.upper()}_SCHEMA_LEN {len( schema )}" )
+                # Extern the schema, it lives in packets.c
+                fmt.output( f"extern enum packet_items {packet.upper()}_SCHEMA[];" )
+                fmt.define( f"{packet.upper()}_SCHEMA_LEN", len( schema ))
+
             if 'fields' in info:
                 cbarg = f"struct {packet.lower()}"
             else:
                 cbarg = 'void *'
 
             fmt.funcprototype( 'void', f"callback_{packet.lower()}", cbarg )
+            fmt.blank()
+
+
+def make_packets_c( ifh, ofh, include ):
+    fmt = CFormatter( ofh )
+
+    # Output the heading
+    ( fmt.comment( "This is an automatically generated file. Do not edit.",
+                  '',
+                  "To regenerate this file, edit spec.yaml and call",
+                  "spec2packetsh.py" )
+
+     .include( include, True )
+     .blank()
+     )
+
+    # Load the YAML
+    spec = yaml.load( ifh )
+
+    for side in spec['packets']:
+        fmt.comment( f"{side}-side packets." ).blank()
+        for packet, info in spec['packets'][side].items():
+            if 'fields' in info:
+                fmt.comment( info['desc'] )
+                schema = []
+                for field in info['fields']:
+                    schema.append( f"PKT_ITEM_{field['type'].upper()}" )
+                    if 'children' in field:
+                        for child in field['children']:
+                            schema.append( f"PKT_ITEM_{child['type'].upper()}" )
+                        schema.append( "PKT_ITEM_END" )
+
+                fmt.arrayliteral( 'enum packet_items',
+                                 f"{packet.upper()}_SCHEMA",
+                                 *schema )
             fmt.blank()
 
         # Map packet types by number and sort them
